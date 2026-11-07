@@ -143,11 +143,12 @@ class CommandExecutor(private val context: Context) {
             Settings.System.putInt(context.contentResolver, Settings.System.SCREEN_BRIGHTNESS,
                 if (up) minOf(255, cur + 40) else maxOf(10, cur - 40))
             CommandResult(true, if (up) "Brightness increased" else "Brightness decreased")
+        } else if (!canOpenScreens()) {
+            needAccessibility
         } else {
-            if (!canOpenScreens()) return needAccessibility
             context.startActivity(Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS,
                 Uri.parse("package:${context.packageName}")).apply { flags = Intent.FLAG_ACTIVITY_NEW_TASK })
-            CommandResult(false, "Please grant write settings permission")
+            CommandResult(false, "Allow MOJO to change system settings, then ask again.")
         }
     } catch (e: Exception) { CommandResult(false, "Could not change brightness") }
 
