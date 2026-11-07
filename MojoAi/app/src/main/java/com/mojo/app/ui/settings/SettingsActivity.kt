@@ -93,14 +93,14 @@ class SettingsActivity : AppCompatActivity() {
                     release.isNewer -> {
                         pendingRelease = release
                         tvUpdateBadge.text = "Update available!"
-                        tvUpdateBadge.setTextColor(getColor(R.color.mojo_purple))
+                        tvUpdateBadge.setTextColor(getColor(R.color.mojo_primary))
                         btnDownloadUpdate.visibility = View.VISIBLE
                         btnDownloadUpdate.text = "Download ${release.version}"
                         updater.showUpdateDialog(release)
                     }
                     else -> {
                         tvUpdateBadge.text = "Up to date"
-                        tvUpdateBadge.setTextColor(getColor(R.color.mojo_teal))
+                        tvUpdateBadge.setTextColor(getColor(R.color.mojo_accent))
                         btnDownloadUpdate.visibility = View.GONE
                         Toast.makeText(this@SettingsActivity, "MOJO is up to date", Toast.LENGTH_SHORT).show()
                     }
@@ -116,7 +116,7 @@ class SettingsActivity : AppCompatActivity() {
                 runOnUiThread {
                     pendingRelease = release
                     tvUpdateBadge.text = "Update available!"
-                    tvUpdateBadge.setTextColor(getColor(R.color.mojo_purple))
+                    tvUpdateBadge.setTextColor(getColor(R.color.mojo_primary))
                     btnDownloadUpdate.visibility = View.VISIBLE
                     btnDownloadUpdate.text = "Download ${release.version}"
                 }

@@ -5,7 +5,7 @@
     android:background="@drawable/bg_card" android:padding="12dp">
     <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
         android:text="MOJO" android:textSize="16sp" android:textStyle="bold"
-        android:textColor="@color/mojo_purple" android:letterSpacing="0.1"/>
+        android:textColor="@color/mojo_primary" android:letterSpacing="0.1"/>
     <TextView android:id="@+id/widget_status" android:layout_width="wrap_content"
         android:layout_height="wrap_content" android:text="Listening"
         android:textSize="12sp" android:textColor="@color/text_secondary" android:layout_marginTop="2dp"/>

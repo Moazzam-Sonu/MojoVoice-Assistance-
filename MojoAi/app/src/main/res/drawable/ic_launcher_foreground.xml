@@ -1,7 +1,211 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  MOJO launcher icon — the MOJO mascot head (headband, glossy face, glowing
+  headphones, headset mic and eyes), redrawn from the React MojoMascot SVG
+  (viewBox 320x300). The group scales it into the 108dp adaptive-icon canvas
+  so it stays inside the circular safe zone.
+-->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:width="108dp" android:height="108dp"
-    android:viewportWidth="108" android:viewportHeight="108">
-    <path android:fillColor="#0F0F12" android:pathData="M0,0h108v108h-108z"/>
-    <path android:fillColor="#7F77DD" android:pathData="M28,76 L28,32 L40,32 L60,60 L60,32 L72,32 L72,76 L60,76 L40,48 L40,76 Z"/>
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <group
+        android:scaleX="0.22"
+        android:scaleY="0.22"
+        android:translateX="18.8"
+        android:translateY="23.75">
+
+        <!-- ── Headband ── -->
+        <path
+            android:pathData="M64,137 C52,10 268,10 256,137"
+            android:strokeWidth="19">
+            <aapt:attr name="android:strokeColor">
+                <gradient android:type="linear"
+                    android:startX="60" android:startY="30"
+                    android:endX="120" android:endY="245">
+                    <item android:offset="0" android:color="#FFFFFFFF"/>
+                    <item android:offset="0.5" android:color="#FFA7BDFF"/>
+                    <item android:offset="1" android:color="#FF1C78FF"/>
+                </gradient>
+            </aapt:attr>
+        </path>
+        <path
+            android:pathData="M64,137 C52,10 268,10 256,137"
+            android:strokeWidth="15">
+            <aapt:attr name="android:strokeColor">
+                <gradient android:type="linear"
+                    android:startX="52" android:startY="40"
+                    android:endX="268" android:endY="137">
+                    <item android:offset="0" android:color="#FF8BAAFF"/>
+                    <item android:offset="0.18" android:color="#FF203D8D"/>
+                    <item android:offset="0.5" android:color="#FF081633"/>
+                    <item android:offset="0.85" android:color="#FF132655"/>
+                    <item android:offset="1" android:color="#FF557AE0"/>
+                </gradient>
+            </aapt:attr>
+        </path>
+        <!-- band light: soft glow + core -->
+        <path
+            android:pathData="M72,99 C92,40 228,40 248,99"
+            android:strokeColor="#5543DFFF"
+            android:strokeWidth="9"
+            android:strokeLineCap="round"/>
+        <path
+            android:pathData="M72,99 C92,40 228,40 248,99"
+            android:strokeColor="#FF43DFFF"
+            android:strokeWidth="3"
+            android:strokeLineCap="round"/>
+
+        <!-- ── Face ── -->
+        <path
+            android:pathData="M160,86 C94,86 63,109 63,165 C63,220 92,245 160,245 C228,245 257,220 257,165 C257,109 226,86 160,86Z"
+            android:strokeWidth="2">
+            <aapt:attr name="android:fillColor">
+                <gradient android:type="radial"
+                    android:centerX="134.8" android:centerY="122.6"
+                    android:gradientRadius="140">
+                    <item android:offset="0" android:color="#FFFFFFFF"/>
+                    <item android:offset="0.52" android:color="#FFE9EDF9"/>
+                    <item android:offset="0.82" android:color="#FFC0CCEE"/>
+                    <item android:offset="0.96" android:color="#FF789EEB"/>
+                    <item android:offset="1" android:color="#FF4798FF"/>
+                </gradient>
+            </aapt:attr>
+            <aapt:attr name="android:strokeColor">
+                <gradient android:type="linear"
+                    android:startX="60" android:startY="30"
+                    android:endX="120" android:endY="245">
+                    <item android:offset="0" android:color="#FFFFFFFF"/>
+                    <item android:offset="0.5" android:color="#FFA7BDFF"/>
+                    <item android:offset="1" android:color="#FF1C78FF"/>
+                </gradient>
+            </aapt:attr>
+        </path>
+        <!-- glossy highlight + chin line -->
+        <path
+            android:pathData="M79,135 C88,101 126,93 166,94"
+            android:strokeColor="#A6FFFFFF"
+            android:strokeWidth="3"
+            android:strokeLineCap="round"/>
+        <path
+            android:pathData="M97,230 Q160,253 222,229"
+            android:strokeColor="#A669C8FF"
+            android:strokeWidth="2"/>
+
+        <!-- ── Headphones (left, then mirrored right) ── -->
+        <group android:name="left_headphone">
+            <path
+                android:pathData="M67.5,111 a11.5,11.5 0 0 1 11.5,11.5 v88 a11.5,11.5 0 0 1 -23,0 v-88 a11.5,11.5 0 0 1 11.5,-11.5z"
+                android:fillColor="#FF0B1A3D"
+                android:strokeColor="#FF5789EF"
+                android:strokeWidth="1"/>
+            <path
+                android:pathData="M56,120 C27,119 27,143 27,169 C27,195 31,214 54,215 L60,207 L60,128Z"
+                android:strokeColor="#FFA1C6FF"
+                android:strokeWidth="1">
+                <aapt:attr name="android:fillColor">
+                    <gradient android:type="linear"
+                        android:startX="27" android:startY="160"
+                        android:endX="60" android:endY="170">
+                        <item android:offset="0" android:color="#FF749CFF"/>
+                        <item android:offset="0.25" android:color="#FFFCFFFF"/>
+                        <item android:offset="0.63" android:color="#FFE0EAFF"/>
+                        <item android:offset="1" android:color="#FF2A6AE4"/>
+                    </gradient>
+                </aapt:attr>
+            </path>
+            <path
+                android:pathData="M20,169 a12,37 0 1,0 24,0 a12,37 0 1,0 -24,0z"
+                android:fillColor="#FF0B1A3D"
+                android:strokeColor="#FF2FA3FF"
+                android:strokeWidth="2"/>
+            <path
+                android:pathData="M22,169 a9,32 0 1,0 18,0 a9,32 0 1,0 -18,0z"
+                android:strokeColor="#5551E4FF"
+                android:strokeWidth="7"/>
+            <path
+                android:pathData="M22,169 a9,32 0 1,0 18,0 a9,32 0 1,0 -18,0z"
+                android:strokeColor="#FF51E4FF"
+                android:strokeWidth="2.5"/>
+        </group>
+        <group
+            android:name="right_headphone"
+            android:pivotX="160"
+            android:scaleX="-1">
+            <path
+                android:pathData="M67.5,111 a11.5,11.5 0 0 1 11.5,11.5 v88 a11.5,11.5 0 0 1 -23,0 v-88 a11.5,11.5 0 0 1 11.5,-11.5z"
+                android:fillColor="#FF0B1A3D"
+                android:strokeColor="#FF5789EF"
+                android:strokeWidth="1"/>
+            <path
+                android:pathData="M56,120 C27,119 27,143 27,169 C27,195 31,214 54,215 L60,207 L60,128Z"
+                android:strokeColor="#FFA1C6FF"
+                android:strokeWidth="1">
+                <aapt:attr name="android:fillColor">
+                    <gradient android:type="linear"
+                        android:startX="27" android:startY="160"
+                        android:endX="60" android:endY="170">
+                        <item android:offset="0" android:color="#FF749CFF"/>
+                        <item android:offset="0.25" android:color="#FFFCFFFF"/>
+                        <item android:offset="0.63" android:color="#FFE0EAFF"/>
+                        <item android:offset="1" android:color="#FF2A6AE4"/>
+                    </gradient>
+                </aapt:attr>
+            </path>
+            <path
+                android:pathData="M20,169 a12,37 0 1,0 24,0 a12,37 0 1,0 -24,0z"
+                android:fillColor="#FF0B1A3D"
+                android:strokeColor="#FF2FA3FF"
+                android:strokeWidth="2"/>
+            <path
+                android:pathData="M22,169 a9,32 0 1,0 18,0 a9,32 0 1,0 -18,0z"
+                android:strokeColor="#5551E4FF"
+                android:strokeWidth="7"/>
+            <path
+                android:pathData="M22,169 a9,32 0 1,0 18,0 a9,32 0 1,0 -18,0z"
+                android:strokeColor="#FF51E4FF"
+                android:strokeWidth="2.5"/>
+        </group>
+
+        <!-- ── Headset microphone ── -->
+        <path
+            android:pathData="M260,182 C255,201 241,210 215,213"
+            android:strokeColor="#FF399EE9"
+            android:strokeWidth="7"
+            android:strokeLineCap="round"/>
+        <path
+            android:pathData="M260,182 C255,201 241,210 215,213"
+            android:strokeColor="#FF0B1A3D"
+            android:strokeWidth="4.5"
+            android:strokeLineCap="round"/>
+        <group
+            android:pivotX="201"
+            android:pivotY="217"
+            android:rotation="-8">
+            <path
+                android:pathData="M194,207 h15 a10,10 0 0 1 10,10 v1 a10,10 0 0 1 -10,10 h-15 a10,10 0 0 1 -10,-10 v-1 a10,10 0 0 1 10,-10z"
+                android:fillColor="#FF0B1A3D"
+                android:strokeColor="#FF43BFFF"
+                android:strokeWidth="1.5"/>
+            <path
+                android:pathData="M190,211 Q192,209 198,209 H210"
+                android:strokeColor="#A6A6EAFF"
+                android:strokeWidth="1"
+                android:strokeLineCap="round"/>
+            <path
+                android:pathData="M194,215 h15 a2,2 0 0 1 0,4 h-15 a2,2 0 0 1 0,-4z"
+                android:fillColor="#FF61F0FF"/>
+        </group>
+
+        <!-- ── Eyes ── -->
+        <path
+            android:pathData="M122.5,157 a8.5,8.5 0 0 1 8.5,8.5 v14 a8.5,8.5 0 0 1 -17,0 v-14 a8.5,8.5 0 0 1 8.5,-8.5z"
+            android:fillColor="#FF030915"/>
+        <path
+            android:pathData="M197.5,157 a8.5,8.5 0 0 1 8.5,8.5 v14 a8.5,8.5 0 0 1 -17,0 v-14 a8.5,8.5 0 0 1 8.5,-8.5z"
+            android:fillColor="#FF030915"/>
+    </group>
 </vector>

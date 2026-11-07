@@ -17,6 +17,8 @@ import androidx.core.app.ServiceCompat
 import androidx.core.content.ContextCompat
 import com.mojo.app.commands.CommandExecutor
 import com.mojo.app.core.MojoApplication
+import com.mojo.app.core.MojoStatus
+import com.mojo.app.ui.mascot.MojoState
 import com.mojo.app.db.CommandHistoryEntity
 import com.mojo.app.engine.nlu.MojoIntentEngine
 import com.mojo.app.engine.stt.MojoSTTEngine
@@ -67,6 +69,17 @@ class MojoEngine : Service() {
         }
         acquireWakeLock()
         initEngines()
+        MojoStatus.running.value = true
+        setMascot(MojoState.IDLE)
+    }
+
+    /** Tells the UI what MOJO is doing (mascot state). Safe from any thread. */
+    private fun setMascot(state: MojoState) { MojoStatus.state.value = state }
+
+    /** Shows [state] for [ms], then returns to IDLE unless something else happened meanwhile. */
+    private fun flashMascot(state: MojoState, ms: Long) {
+        setMascot(state)
+        mainHandler.postDelayed({ if (MojoStatus.state.value == state) setMascot(MojoState.IDLE) }, ms)
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -121,6 +134,10 @@ class MojoEngine : Service() {
         Log.d(TAG, "Wake word detected")
         isListening = true
         updateNotification("MOJO listening...")
+        setMascot(MojoState.GREETING)        // waves hello…
+        mainHandler.postDelayed({            // …then closes its eyes to listen
+            if (isListening) setMascot(MojoState.LISTENING)
+        }, 700)
         ttsEngine.speak("yes")
         sttEngine.startListening()
 
@@ -130,6 +147,7 @@ class MojoEngine : Service() {
                 isListening = false
                 sttEngine.stopListening()
                 updateNotification("MOJO listening — say your wake word")
+                setMascot(MojoState.IDLE)
             }
         }, 8000)
     }
@@ -138,11 +156,20 @@ class MojoEngine : Service() {
         isListening = false
         sttEngine.stopListening()
         Log.d(TAG, "Command: $text")
+        MojoStatus.heard.value = text
+        setMascot(MojoState.THINKING)
 
         scope.launch {
             val command = intentEngine.parse(text)
             val result  = withContext(Dispatchers.Main) { executor.execute(command, text) }
-            ttsEngine.speak(result.feedback)
+            MojoStatus.reply.value = result.feedback
+            setMascot(MojoState.SPEAKING)
+            ttsEngine.speak(result.feedback) {
+                // Speech finished: celebrate a success, look focused on a failure
+                mainHandler.post {
+                    flashMascot(if (result.success) MojoState.SUCCESS else MojoState.FOCUS, 2_400)
+                }
+            }
             updateNotification("Last: \"${text.take(40)}\"")
             try {
                 MojoApplication.instance.database.commandHistoryDao().insert(
@@ -155,6 +182,9 @@ class MojoEngine : Service() {
 
     override fun onDestroy() {
         super.onDestroy()
+        mainHandler.removeCallbacksAndMessages(null)
+        MojoStatus.running.value = false
+        setMascot(MojoState.SLEEP)
         if (canRun) {
             wakeEngine.stop()
             sttEngine.stopListening()

@@ -16,7 +16,7 @@
             android:text="Set Your Wake Word"
             android:textSize="24sp"
             android:textStyle="bold"
-            android:textColor="@color/mojo_purple"
+            android:textColor="@color/mojo_primary"
             android:layout_marginBottom="6dp"/>
 
         <TextView
@@ -95,7 +95,7 @@
                 android:text="0 / 3"
                 android:textSize="32sp"
                 android:textStyle="bold"
-                android:textColor="@color/mojo_purple"
+                android:textColor="@color/mojo_primary"
                 android:layout_gravity="center_horizontal"
                 android:layout_marginBottom="14dp"/>
 
@@ -106,7 +106,7 @@
                 android:layout_height="8dp"
                 android:max="3"
                 android:progress="0"
-                android:progressTint="@color/mojo_purple"
+                android:progressTint="@color/mojo_primary"
                 android:layout_marginBottom="16dp"/>
 
             <Button
@@ -162,7 +162,7 @@
             android:layout_height="wrap_content"
             android:text=""
             android:textSize="14sp"
-            android:textColor="@color/mojo_teal"
+            android:textColor="@color/mojo_accent"
             android:gravity="center"
             android:lineSpacingMultiplier="1.4"/>
 

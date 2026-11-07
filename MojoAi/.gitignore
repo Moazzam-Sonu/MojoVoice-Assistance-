@@ -3,6 +3,10 @@
 build/
 app/build/
 local.properties
+# Signing keys — never commit (permanent key lives outside the repo)
+*.jks
+*.keystore
+KEYSTORE_BASE64.txt
 .gradle/
 .idea/
 *.iml

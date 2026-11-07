@@ -2,10 +2,10 @@
 <resources>
 
     <style name="Theme.Mojo" parent="Theme.Material3.DayNight.NoActionBar">
-        <item name="colorPrimary">@color/mojo_purple</item>
-        <item name="colorPrimaryVariant">@color/mojo_purple_dark</item>
-        <item name="colorOnPrimary">@color/text_primary</item>
-        <item name="colorSecondary">@color/mojo_teal</item>
+        <item name="colorPrimary">@color/mojo_primary</item>
+        <item name="colorPrimaryVariant">@color/mojo_primary_dark</item>
+        <item name="colorOnPrimary">@color/mojo_on_primary</item>
+        <item name="colorSecondary">@color/mojo_accent</item>
         <item name="android:colorBackground">@color/bg_dark</item>
         <item name="android:windowBackground">@color/bg_dark</item>
         <item name="android:statusBarColor">@color/bg_dark</item>
@@ -15,10 +15,10 @@
     </style>
 
     <style name="Theme.Mojo.WithActionBar" parent="Theme.Material3.DayNight">
-        <item name="colorPrimary">@color/mojo_purple</item>
-        <item name="colorPrimaryVariant">@color/mojo_purple_dark</item>
-        <item name="colorOnPrimary">@color/text_primary</item>
-        <item name="colorSecondary">@color/mojo_teal</item>
+        <item name="colorPrimary">@color/mojo_primary</item>
+        <item name="colorPrimaryVariant">@color/mojo_primary_dark</item>
+        <item name="colorOnPrimary">@color/mojo_on_primary</item>
+        <item name="colorSecondary">@color/mojo_accent</item>
         <item name="android:colorBackground">@color/bg_dark</item>
         <item name="android:windowBackground">@color/bg_dark</item>
         <item name="android:statusBarColor">@color/bg_dark</item>

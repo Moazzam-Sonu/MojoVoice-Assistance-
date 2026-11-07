@@ -35,23 +35,32 @@ jobs:
           gradle-version: '8.7'
           cache-disabled: true
 
-      - name: Generate signing keystore
+      # The SAME permanent key must sign every release, otherwise Android
+      # refuses to install an update over the existing app.
+      - name: Restore signing keystore from secrets
+        env:
+          MOJO_KEYSTORE_BASE64: ${{ secrets.MOJO_KEYSTORE_BASE64 }}
+        # Without the secrets we still compile, but only as a debug "dev" pre-release
+        # (pre-releases are ignored by the in-app updater).
         run: |
-          keytool -genkeypair \
-            -alias mojo_key \
-            -keyalg RSA \
-            -keysize 2048 \
-            -validity 10000 \
-            -keystore mojo_release.jks \
-            -storepass mojo2024 \
-            -keypass mojo2024 \
-            -dname "CN=MOJO App,OU=MOJO,O=Mojo,C=PK" \
-            -storetype PKCS12 2>/dev/null
-          echo "Keystore: $(ls -lh mojo_release.jks)"
+          if [ -z "$MOJO_KEYSTORE_BASE64" ]; then
+            echo "::warning::Signing secrets missing - building a debug dev pre-release instead of a signed release."
+            echo "HAS_KEY=false" >> $GITHUB_ENV
+          else
+            echo "$MOJO_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/mojo_release.jks"
+            echo "Keystore restored: $(ls -lh $RUNNER_TEMP/mojo_release.jks)"
+            echo "HAS_KEY=true" >> $GITHUB_ENV
+          fi
 
       - name: Build signed release APK (clean)
+        env:
+          MOJO_KEYSTORE_PATH: ${{ runner.temp }}/mojo_release.jks
+          MOJO_KEYSTORE_PASSWORD: ${{ secrets.MOJO_KEYSTORE_PASSWORD }}
+          MOJO_KEY_ALIAS: ${{ secrets.MOJO_KEY_ALIAS }}
+          MOJO_KEY_PASSWORD: ${{ secrets.MOJO_KEY_PASSWORD }}
         run: |
-          gradle clean assembleRelease -PversionCode=${{ github.run_number }} 2>&1 | tee /tmp/build.txt
+          if [ "$HAS_KEY" = "true" ]; then TASK=assembleRelease; else TASK=assembleDebug; fi
+          gradle clean $TASK -PversionCode=${{ github.run_number }} 2>&1 | tee /tmp/build.txt
           if grep -q "BUILD SUCCESSFUL" /tmp/build.txt; then
             echo "BUILD_OK=true" >> $GITHUB_ENV
           else
@@ -79,8 +88,13 @@ jobs:
         if: env.BUILD_OK == 'true'
         run: |
           mkdir -p release
-          APK=$(find app/build/outputs/apk/release -name "*.apk" | head -1)
-          cp "$APK" release/MOJO-v1.0.${{ github.run_number }}.apk
+          if [ "$HAS_KEY" = "true" ]; then
+            APK=$(find app/build/outputs/apk/release -name "*.apk" | head -1)
+            cp "$APK" release/MOJO-v1.0.${{ github.run_number }}.apk
+          else
+            APK=$(find app/build/outputs/apk/debug -name "*.apk" | head -1)
+            cp "$APK" release/MOJO-dev-${{ github.run_number }}-debug.apk
+          fi
           echo "APK: $(ls -lh release/)"
 
       - name: Upload APK artifact
@@ -91,8 +105,22 @@ jobs:
           path: MojoAi/release/MOJO-*.apk
           retention-days: 90
 
+      - name: Create dev pre-release (unsigned debug build)
+        if: env.BUILD_OK == 'true' && env.HAS_KEY != 'true'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: dev-${{ github.run_number }}
+          name: "MOJO dev build ${{ github.run_number }}"
+          prerelease: true
+          body: |
+            Debug test build — not for normal use. Signed with a throwaway debug key,
+            so uninstall any other MOJO build before installing this one.
+          files: MojoAi/release/MOJO-*.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Create GitHub Release
-        if: env.BUILD_OK == 'true'
+        if: env.BUILD_OK == 'true' && env.HAS_KEY == 'true'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v1.0.${{ github.run_number }}
@@ -116,7 +144,7 @@ jobs:
             4. Tap Install — works on every Android 8.0+ phone
 
             ### First time setup
-            Open MOJO → grant permissions → enable Accessibility → Set Wake Word → record 20 samples → Train
+            Open MOJO → grant permissions → enable Accessibility → Set Wake Word → record 3 samples → Train
           files: MojoAi/release/MOJO-*.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
