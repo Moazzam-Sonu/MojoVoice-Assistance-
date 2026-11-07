@@ -17,7 +17,9 @@ import android.util.Log
  */
 class MojoSTTEngine(
     private val context: Context,
-    private val onResult: (String) -> Unit
+    private val onResult: (String) -> Unit,
+    /** Called (on the main thread) when nothing usable was recognised. */
+    private val onError: () -> Unit = {},
 ) {
     companion object { private const val TAG = "MojoSTTEngine" }
 
@@ -47,6 +49,7 @@ class MojoSTTEngine(
                     override fun onError(error: Int) {
                         isListening = false
                         Log.w(TAG, "STT error code: $error")
+                        this@MojoSTTEngine.onError()
                     }
                     override fun onResults(results: Bundle?) {
                         isListening = false
@@ -54,7 +57,7 @@ class MojoSTTEngine(
                             ?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
                             ?.firstOrNull()?.trim() ?: ""
                         Log.d(TAG, "STT result: \"$text\"")
-                        if (text.isNotBlank()) onResult(text)
+                        if (text.isNotBlank()) onResult(text) else this@MojoSTTEngine.onError()
                     }
                     override fun onPartialResults(partial: Bundle?) {}
                     override fun onEvent(eventType: Int, params: Bundle?) {}
@@ -74,6 +77,7 @@ class MojoSTTEngine(
             } catch (e: Exception) {
                 Log.e(TAG, "STT start failed: ${e.message}")
                 isListening = false
+                this@MojoSTTEngine.onError()
             }
         }
     }

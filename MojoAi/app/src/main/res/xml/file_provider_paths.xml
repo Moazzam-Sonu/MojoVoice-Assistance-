@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Only the folder where in-app updates are downloaded is shareable. -->
 <paths>
     <external-files-path
         name="mojo_downloads"
         path="Download/"/>
-    <external-path
-        name="external_files"
-        path="."/>
 </paths>

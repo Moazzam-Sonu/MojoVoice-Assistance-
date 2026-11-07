@@ -205,7 +205,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="100% offline. Built from scratch. No third-party AI SDKs."
+                android:text="Wake word detection runs entirely on your phone. Commands are understood with your phone\u0027s built-in speech recognition."
                 android:textSize="12sp"
                 android:textColor="@color/text_muted"
                 android:layout_marginTop="6dp"

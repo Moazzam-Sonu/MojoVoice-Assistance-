@@ -9,7 +9,9 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.mojo.app.R
+import com.google.android.material.switchmaterial.SwitchMaterial
 import com.mojo.app.core.MojoApplication
+import com.mojo.app.core.MojoPrefs
 import com.mojo.app.ui.history.HistoryActivity
 import com.mojo.app.update.MojoUpdater
 import kotlinx.coroutines.launch
@@ -56,6 +58,12 @@ class SettingsActivity : AppCompatActivity() {
         // Download + install update button
         btnDownloadUpdate.setOnClickListener {
             pendingRelease?.let { updater.showUpdateDialog(it) }
+        }
+
+        // Auto-start on boot
+        findViewById<SwitchMaterial>(R.id.switchAutoStart).apply {
+            isChecked = MojoPrefs.autoStart(this@SettingsActivity)
+            setOnCheckedChangeListener { _, on -> MojoPrefs.setAutoStart(this@SettingsActivity, on) }
         }
 
         // History buttons

@@ -68,10 +68,12 @@ fun HomeScreen(
     reply: String,
     wakeTrained: Boolean,
     accessibilityOn: Boolean,
+    batteryUnrestricted: Boolean,
     onToggle: () -> Unit,
     onWakeWord: () -> Unit,
     onSettings: () -> Unit,
     onAccessibility: () -> Unit,
+    onBattery: () -> Unit,
 ) {
     val mascotState = if (running) state else MojoState.SLEEP
 
@@ -154,9 +156,21 @@ fun HomeScreen(
             AnimatedVisibility(visible = !accessibilityOn, enter = fadeIn() + expandVertically(), exit = fadeOut() + shrinkVertically()) {
                 HintCard(
                     title = "Turn on Accessibility",
-                    body = "MOJO needs it for home, back, scrolling and screenshots.",
+                    body = "MOJO needs it to open apps, make calls, go home or back, scroll and take screenshots. " +
+                        "If Android says \u201CRestricted setting\u201D: open App info for MOJO \u2192 \u22EE menu \u2192 " +
+                        "Allow restricted settings, then try again.",
                     action = "Enable",
                     onClick = onAccessibility,
+                    warning = true,
+                )
+            }
+
+            AnimatedVisibility(visible = !batteryUnrestricted, enter = fadeIn() + expandVertically(), exit = fadeOut() + shrinkVertically()) {
+                HintCard(
+                    title = "Keep MOJO awake",
+                    body = "Some phones stop background apps to save battery. Allow MOJO to keep listening.",
+                    action = "Allow",
+                    onClick = onBattery,
                     warning = true,
                 )
             }

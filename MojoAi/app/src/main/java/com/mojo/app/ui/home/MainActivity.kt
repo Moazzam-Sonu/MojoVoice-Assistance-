@@ -4,7 +4,9 @@ import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
+import android.net.Uri
 import android.os.Bundle
+import android.os.PowerManager
 import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -20,12 +22,13 @@ import com.mojo.app.engine.MojoEngine
 import com.mojo.app.ui.settings.SettingsActivity
 import com.mojo.app.ui.theme.MojoTheme
 import com.mojo.app.ui.wakeword.WakeWordActivity
-import java.io.File
+import com.mojo.app.engine.wake.MojoWakeWordEngine
 
 class MainActivity : ComponentActivity() {
 
     private var accessibilityOn by mutableStateOf(false)
     private var wakeTrained by mutableStateOf(false)
+    private var batteryUnrestricted by mutableStateOf(true)
 
     private val askPermissions = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -48,10 +51,12 @@ class MainActivity : ComponentActivity() {
                     reply = reply,
                     wakeTrained = wakeTrained,
                     accessibilityOn = accessibilityOn,
+                    batteryUnrestricted = batteryUnrestricted,
                     onToggle = { if (running) MojoEngine.stop(this) else startMojo() },
                     onWakeWord = { startActivity(Intent(this, WakeWordActivity::class.java)) },
                     onSettings = { startActivity(Intent(this, SettingsActivity::class.java)) },
                     onAccessibility = { startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)) },
+                    onBattery = { askBatteryExemption() },
                 )
             }
         }
@@ -62,7 +67,17 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         accessibilityOn = MojoAccessibilityService.instance != null
-        wakeTrained = File(filesDir, "models/wake_model.mojo").exists()
+        wakeTrained = MojoWakeWordEngine.isTrained(this)
+        batteryUnrestricted = getSystemService(PowerManager::class.java).isIgnoringBatteryOptimizations(packageName)
+    }
+
+    /** Asks Android to stop battery optimisation from killing MOJO's listener. */
+    private fun askBatteryExemption() {
+        try {
+            startActivity(Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, Uri.parse("package:$packageName")))
+        } catch (_: Exception) {
+            startActivity(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS))
+        }
     }
 
     private fun hasMicPermission() =

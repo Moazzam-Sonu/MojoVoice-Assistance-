@@ -39,10 +39,19 @@ class AudioEngine {
         audioRecord = null
     }
 
-    fun readFrame(): FloatArray {
-        val pcm = ShortArray(FRAME_SIZE)
-        audioRecord?.read(pcm, 0, FRAME_SIZE)
-        return FloatArray(FRAME_SIZE) { i -> pcm[i] / 32768f }
+    fun readFrame(): FloatArray = readSamples(FRAME_SIZE)
+
+    /** Blocks until [n] samples are read (or capture stops); returns them as -1..1 floats. */
+    fun readSamples(n: Int): FloatArray {
+        val pcm = ShortArray(n)
+        var off = 0
+        while (off < n) {
+            val rec = audioRecord ?: break
+            val r = rec.read(pcm, off, n - off)
+            if (r <= 0) break
+            off += r
+        }
+        return FloatArray(n) { i -> pcm[i] / 32768f }
     }
 
     private fun preEmphasis(samples: FloatArray): FloatArray {
@@ -145,12 +154,12 @@ class AudioEngine {
         return dct(mel, NUM_MFCC)
     }
 
-    fun extractMFCCSequence(audio: FloatArray): List<FloatArray> {
+    fun extractMFCCSequence(audio: FloatArray, hop: Int = HOP_SIZE): List<FloatArray> {
         val frames = mutableListOf<FloatArray>()
         var offset = 0
         while (offset + FRAME_SIZE <= audio.size) {
             frames.add(extractMFCC(audio.sliceArray(offset until offset + FRAME_SIZE)))
-            offset += HOP_SIZE
+            offset += hop
         }
         return frames
     }

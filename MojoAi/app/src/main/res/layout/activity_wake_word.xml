@@ -82,7 +82,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Say your word naturally. MOJO uses AI to generate many training variants from just 3 recordings."
+                android:text="Tap Record, then say your word once, clearly, at normal volume. Each recording lasts 2 seconds. Try a quiet room."
                 android:textSize="12sp"
                 android:textColor="@color/text_secondary"
                 android:lineSpacingMultiplier="1.4"
@@ -139,7 +139,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="MOJO auto-generates 24 training samples from your 3 recordings and trains the model on your phone in ~10 seconds."
+                android:text="MOJO makes many practice samples from your 3 recordings and trains on your phone. This takes up to a minute. Pick a word with 2 or 3 syllables, like \&quot;Hey Mojo\&quot;."
                 android:textSize="12sp"
                 android:textColor="@color/text_secondary"
                 android:lineSpacingMultiplier="1.4"

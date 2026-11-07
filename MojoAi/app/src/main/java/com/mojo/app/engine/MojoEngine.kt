@@ -41,6 +41,8 @@ class MojoEngine : Service() {
     private var wakeLock: PowerManager.WakeLock? = null
     private var isListening = false
     private var canRun = true   // false when started without mic permission
+    private var wakePaused = false   // true while another screen is recording
+    private var conversationId = 0   // ignores stale timeouts from earlier conversations
 
     override fun onCreate() {
         super.onCreate()
@@ -90,14 +92,23 @@ class MojoEngine : Service() {
                 stopSelf()
                 return START_NOT_STICKY
             }
-            else -> startWakeListening()   // ACTION_START, or a sticky restart (null intent)
+            ACTION_PAUSE_WAKE -> {
+                // Another screen needs the mic (wake word recording)
+                wakePaused = true
+                wakeEngine.stop()
+                updateNotification("MOJO paused while you record")
+            }
+            else -> {                       // ACTION_START, or a sticky restart (null intent)
+                wakePaused = false
+                startWakeListening()
+            }
         }
         return START_STICKY
     }
 
     /** (Re)loads the wake model — it may have just been trained — and starts listening. */
     private fun startWakeListening() {
-        if (wakeEngine.isActive) return
+        if (wakePaused || isListening || wakeEngine.isActive) return
         if (wakeEngine.init()) {
             wakeEngine.start()
             updateNotification("MOJO listening — say your wake word")
@@ -113,11 +124,12 @@ class MojoEngine : Service() {
         executor     = CommandExecutor(this)
 
         // STT result callback — fires on main thread from SpeechRecognizer
-        sttEngine = MojoSTTEngine(this) { recognisedText ->
-            if (isListening && recognisedText.isNotBlank()) {
-                handleText(recognisedText)
-            }
-        }
+        sttEngine = MojoSTTEngine(this,
+            onResult = { recognisedText ->
+                if (isListening && recognisedText.isNotBlank()) handleText(recognisedText)
+            },
+            onError = { if (isListening) endConversation() },   // nothing understood
+        )
         sttEngine.init()
 
         // Wake engine runs on IO thread
@@ -132,24 +144,39 @@ class MojoEngine : Service() {
 
     private fun onWakeWordDetected() {
         Log.d(TAG, "Wake word detected")
+        if (isListening) return
         isListening = true
+        val conversation = ++conversationId
+        // Hand the mic over: the wake engine must let go before speech recognition can hear.
+        wakeEngine.stop()
         updateNotification("MOJO listening...")
         setMascot(MojoState.GREETING)        // waves hello…
         mainHandler.postDelayed({            // …then closes its eyes to listen
             if (isListening) setMascot(MojoState.LISTENING)
         }, 700)
-        ttsEngine.speak("yes")
-        sttEngine.startListening()
+        // Start recognising after "yes" so MOJO doesn't hear itself
+        ttsEngine.speak("yes") {
+            mainHandler.post { if (isListening && conversation == conversationId) sttEngine.startListening() }
+        }
 
         // 8 second timeout
         mainHandler.postDelayed({
-            if (isListening) {
-                isListening = false
-                sttEngine.stopListening()
-                updateNotification("MOJO listening — say your wake word")
-                setMascot(MojoState.IDLE)
-            }
+            if (isListening && conversation == conversationId) endConversation()
         }, 8000)
+    }
+
+    /** Stops listening for a command and goes back to waiting for the wake word. */
+    private fun endConversation() {
+        isListening = false
+        sttEngine.stopListening()
+        updateNotification("MOJO listening — say your wake word")
+        setMascot(MojoState.IDLE)
+        resumeWake()
+    }
+
+    /** Gives the mic back to the wake word engine once speech recognition has released it. */
+    private fun resumeWake() {
+        mainHandler.postDelayed({ startWakeListening() }, 400)
     }
 
     private fun handleText(text: String) {
@@ -168,6 +195,7 @@ class MojoEngine : Service() {
                 // Speech finished: celebrate a success, look focused on a failure
                 mainHandler.post {
                     flashMascot(if (result.success) MojoState.SUCCESS else MojoState.FOCUS, 2_400)
+                    resumeWake()
                 }
             }
             updateNotification("Last: \"${text.take(40)}\"")
@@ -228,6 +256,13 @@ class MojoEngine : Service() {
         private const val CHANNEL_ID = "mojo_engine_channel"
         const val ACTION_START = "com.mojo.app.ENGINE_START"
         const val ACTION_STOP  = "com.mojo.app.ENGINE_STOP"
+        const val ACTION_PAUSE_WAKE = "com.mojo.app.ENGINE_PAUSE_WAKE"
+
+        /** Frees the mic (e.g. while recording a wake word). [start] resumes. No-op if not running. */
+        fun pauseWake(context: Context) {
+            if (!MojoStatus.running.value) return
+            context.startService(Intent(context, MojoEngine::class.java).apply { action = ACTION_PAUSE_WAKE })
+        }
 
         /** Starts the engine (or reloads the wake model if it's already running). */
         fun start(context: Context) {

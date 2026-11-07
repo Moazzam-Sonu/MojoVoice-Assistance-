@@ -32,7 +32,11 @@ class HistoryActivity : AppCompatActivity() {
             if (h.isEmpty()) { binding.tvEmpty.visibility = View.VISIBLE } else adapter.setItems(h)
         }
         binding.btnClearHistory.setOnClickListener {
-            lifecycleScope.launch { MojoApplication.instance.database.commandHistoryDao().deleteAll() }
+            lifecycleScope.launch {
+                MojoApplication.instance.database.commandHistoryDao().deleteAll()
+                adapter.setItems(emptyList())
+                binding.tvEmpty.visibility = View.VISIBLE
+            }
         }
     }
     override fun onSupportNavigateUp(): Boolean { onBackPressedDispatcher.onBackPressed(); return true }

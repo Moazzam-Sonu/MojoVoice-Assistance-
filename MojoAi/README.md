@@ -1,44 +1,52 @@
-# MOJO — Offline AI Voice Controller for Android
+# MOJO — Voice Assistant for Android
 
-> Your personal voice AI. No internet. No Google. No third-party SDKs. 100% built from scratch.
+> Say your own wake word, then tell MOJO what to do. MOJO is an animated robot mascot that listens, thinks and answers.
 
 ## Install
 
-**[Download Latest APK](https://github.com/Moazzam-Sonu/MojoVoice-Assistance-/releases/latest)**
+**[Download the latest APK](https://github.com/Moazzam-Sonu/MojoVoice-Assistance-/releases/latest)**
 
 Or visit the download page: **https://moazzam-sonu.github.io/MojoVoice-Assistance-**
 
-## What is MOJO?
+## What MOJO can do
 
-MOJO is a fully offline, always-listening Android voice controller.
-It wakes on your custom word, understands natural language using an on-device AI
-written entirely from scratch, and controls every part of your Android phone.
+- **Custom wake word.** You record your word 3 times and MOJO trains a small neural network on your phone. Wake word detection runs fully on the device.
+- **Voice commands:**
+  - call someone from your contacts
+  - open any app
+  - volume up, down or mute
+  - brightness up or down
+  - flashlight on or off
+  - open WiFi or Bluetooth settings
+  - take a screenshot
+  - lock the phone
+  - scroll up or down
+  - go home, go back, recent apps
+- **Animated mascot.** MOJO floats, blinks and follows your finger. It waves when it hears its name, closes its eyes to listen, shows thinking dots, and celebrates when a command works. Tap it to say hi. Tap it three times quickly and it gets annoyed.
+- **Command history** and a **home screen widget**.
+- **In-app updates** from GitHub Releases.
 
-## Features
+## How it works
 
-- Custom wake word — trained on your own voice, any word you choose
-- 100% offline — works in airplane mode, no server, no cloud
-- No third-party SDKs — FFT, MFCC, neural network, STT, TTS all written by us
-- Full phone control — calls, apps, volume, navigation, flashlight, screenshot
-- Screen vision — reads and taps any element on screen by voice
-- Task agent — multi-step autonomous tasks
-- PC control over LAN — controls your Windows PC by voice
-- Smart home via Home Assistant
-- Habit learning — gets smarter the more you use it
-- Home screen widget
-
-## Tech Stack
-
-| Component | Technology |
-|-----------|------------|
-| Language | Kotlin |
-| Wake word | Our own MFCC + neural network |
-| Speech-to-text | Our own acoustic model + CTC decoder |
-| NLU | Our own rule engine + intent classifier |
-| TTS | Our own concatenative synthesis |
-| Neural net | Our own matrix math + backprop + Adam |
+| Part | Technology |
+|------|------------|
+| Language / UI | Kotlin, Jetpack Compose (home screen and mascot), XML views |
+| Wake word | Own MFCC feature extraction + own neural network (matrix math, backprop, Adam), trained on the phone |
+| Speech to text | Android's built-in `SpeechRecognizer` (offline when your phone has an offline voice pack) |
+| Understanding | Rule-based phrase matching |
+| Voice replies | Android's built-in Text-to-Speech |
 | Phone control | Android AccessibilityService |
-| Database | Room |
+| Storage | Room |
+
+## First-time setup
+
+1. Install the APK. Allow "Install unknown apps" for your browser or file manager if asked.
+2. Open MOJO and allow the microphone, phone, contacts and notification permissions.
+3. **Turn on Accessibility for MOJO.** It's needed to open apps, make calls, go home or back, scroll and take screenshots.
+   - On Android 13+, apps installed outside the Play Store are blocked from Accessibility at first ("Restricted setting").
+   - Open **Settings → Apps → MOJO**, tap the **⋮** menu, then **Allow restricted settings**. Then turn Accessibility on.
+4. Tap **Keep MOJO awake** and allow MOJO to run in the background. Xiaomi, Oppo, Vivo, Samsung and other phones may also need MOJO set to "No restrictions" or "Autostart" in their battery settings.
+5. Tap **Set wake word**. Type your word, record it 3 times and tap **Train**. A 2–3 syllable word like "Hey Mojo" works best.
 
 ## Build from source
 
@@ -48,17 +56,18 @@ cd MojoVoice-Assistance-/MojoAi
 ./gradlew assembleDebug
 ```
 
-APK will be at: `app/build/outputs/apk/debug/app-debug.apk`
+The APK will be at `app/build/outputs/apk/debug/app-debug.apk`. You need JDK 17 or newer and the Android SDK (API 34).
+
+Signed releases are built by GitHub Actions. You need these repository secrets: `MOJO_KEYSTORE_BASE64`, `MOJO_KEYSTORE_PASSWORD`, `MOJO_KEY_ALIAS` and `MOJO_KEY_PASSWORD`. Without them, CI builds a debug "dev" pre-release instead.
 
 ## Requirements
 
 - Android 8.0+ (API 26)
-- 3 GB RAM minimum
 - Microphone
-- Accessibility Service enabled (one-time setup)
+- Accessibility Service enabled
 
 ## License
 
 MIT License — free to use, modify, and distribute.
 
-Based on [NOVA](https://github.com/Aniketsingh2104/NOVA) by Aniketsingh2104 (MIT License).
+Based on [NOVA](https://github.com/Aniketsingh2104/NOVA) by Aniketsingh2104 (MIT License). The MOJO mascot artwork is ported from the author's own MOJO React component.

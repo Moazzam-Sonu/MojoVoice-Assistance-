@@ -3,26 +3,67 @@ import android.content.Context
 import com.mojo.app.commands.CommandType
 import com.mojo.app.commands.ParsedCommand
 
+/**
+ * Turns a spoken sentence into a command. Matches whole words/phrases only,
+ * so "dim" doesn't fire inside "dimension". Specific phrases are checked
+ * before broad ones ("turn on wifi" before "turn on").
+ */
 class MojoIntentEngine(private val context: Context) {
     fun init() {}
+
     fun parse(text: String): ParsedCommand {
-        val t = text.lowercase().trim()
+        val t = text.lowercase()
+            .replace(Regex("[^a-z0-9 ]"), " ")
+            .replace(Regex("\\s+"), " ")
+            .trim()
+
+        fun has(vararg phrases: String) = phrases.any { Regex("\\b${Regex.escape(it)}\\b").containsMatchIn(t) }
+        fun onOff(vararg things: String): Boolean? = when {
+            things.none { has(it) } -> null
+            has("off", "disable", "deactivate", "stop") -> false
+            has("on", "enable", "activate", "start") -> true
+            else -> null
+        }
+        fun cmd(type: CommandType, param: String? = null) =
+            ParsedCommand(type, if (param == null) emptyMap() else mapOf("param" to param))
+
+        onOff("flashlight", "torch", "flash light")?.let {
+            return cmd(if (it) CommandType.FLASHLIGHT_ON else CommandType.FLASHLIGHT_OFF)
+        }
+        onOff("wifi", "wi fi")?.let { return cmd(if (it) CommandType.WIFI_ON else CommandType.WIFI_OFF) }
+        onOff("bluetooth")?.let { return cmd(if (it) CommandType.BLUETOOTH_ON else CommandType.BLUETOOTH_OFF) }
+
         return when {
-            t.contains("call") -> ParsedCommand(CommandType.CALL_CONTACT, mapOf("param" to t.substringAfter("call").trim()))
-            t.contains("open") -> ParsedCommand(CommandType.OPEN_APP, mapOf("param" to t.substringAfter("open").trim()))
-            t.contains("volume up") || t.contains("louder") -> ParsedCommand(CommandType.VOLUME_UP)
-            t.contains("volume down") || t.contains("lower") -> ParsedCommand(CommandType.VOLUME_DOWN)
-            t.contains("mute") || t.contains("silent") -> ParsedCommand(CommandType.VOLUME_MUTE)
-            t.contains("flashlight on") || t.contains("torch on") -> ParsedCommand(CommandType.FLASHLIGHT_ON)
-            t.contains("flashlight off") || t.contains("torch off") -> ParsedCommand(CommandType.FLASHLIGHT_OFF)
-            t.contains("screenshot") -> ParsedCommand(CommandType.TAKE_SCREENSHOT)
-            t.contains("go home") || t == "home" -> ParsedCommand(CommandType.GO_HOME)
-            t.contains("go back") || t == "back" -> ParsedCommand(CommandType.GO_BACK)
-            t.contains("brightness up") || t.contains("brighter") -> ParsedCommand(CommandType.BRIGHTNESS_UP)
-            t.contains("brightness down") || t.contains("dim") -> ParsedCommand(CommandType.BRIGHTNESS_DOWN)
-            t.contains("stop") -> ParsedCommand(CommandType.MOJO_STOP)
-            t.contains("help") -> ParsedCommand(CommandType.MOJO_HELP)
+            has("volume up", "louder", "increase volume", "turn it up", "raise volume") -> cmd(CommandType.VOLUME_UP)
+            has("volume down", "quieter", "decrease volume", "lower volume", "lower the volume", "turn it down") -> cmd(CommandType.VOLUME_DOWN)
+            has("mute", "silent", "silence") -> cmd(CommandType.VOLUME_MUTE)
+            has("brightness up", "brighter", "increase brightness") -> cmd(CommandType.BRIGHTNESS_UP)
+            has("brightness down", "dimmer", "dim the screen", "decrease brightness", "lower brightness") -> cmd(CommandType.BRIGHTNESS_DOWN)
+            has("screenshot", "screen shot", "capture screen") -> cmd(CommandType.TAKE_SCREENSHOT)
+            has("lock screen", "lock the phone", "lock phone", "lock my phone") -> cmd(CommandType.LOCK_SCREEN)
+            has("recent apps", "recents", "app switcher") -> cmd(CommandType.RECENT_APPS)
+            has("scroll down") -> cmd(CommandType.SCROLL_DOWN)
+            has("scroll up") -> cmd(CommandType.SCROLL_UP)
+            has("go home", "home screen") || t == "home" -> cmd(CommandType.GO_HOME)
+            has("go back") || t == "back" -> cmd(CommandType.GO_BACK)
+
+            has("call", "phone", "dial", "ring") ->
+                cmd(CommandType.CALL_CONTACT, afterWord(t, "call", "phone", "dial", "ring").removePrefix("to ").trim())
+            has("open", "launch", "start", "run") ->
+                cmd(CommandType.OPEN_APP, afterWord(t, "open", "launch", "start", "run")
+                    .removePrefix("the ").removeSuffix(" app").removeSuffix(" application").trim())
+
+            has("help", "what can you do") -> cmd(CommandType.MOJO_HELP)
+            has("status", "are you there", "are you working") -> cmd(CommandType.MOJO_STATUS)
+            has("stop", "go to sleep", "sleep") -> cmd(CommandType.MOJO_STOP)
             else -> ParsedCommand(CommandType.UNKNOWN, mapOf("original" to t))
         }
+    }
+
+    /** Everything after the first of [words] that appears in [t]. */
+    private fun afterWord(t: String, vararg words: String): String {
+        val words2 = t.split(" ")
+        val i = words2.indexOfFirst { it in words }
+        return if (i < 0) "" else words2.drop(i + 1).joinToString(" ")
     }
 }
