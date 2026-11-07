@@ -16,7 +16,7 @@
             android:layout_height="wrap_content"
             android:text="UPDATE"
             android:textSize="11sp"
-            android:textColor="@color/nova_purple"
+            android:textColor="@color/mojo_purple"
             android:letterSpacing="0.1"
             android:layout_marginBottom="10dp"
             android:layout_marginTop="4dp"/>
@@ -65,7 +65,7 @@
                     android:layout_height="wrap_content"
                     android:text="Up to date"
                     android:textSize="12sp"
-                    android:textColor="@color/nova_teal"
+                    android:textColor="@color/mojo_teal"
                     android:visibility="visible"/>
 
             </LinearLayout>
@@ -95,7 +95,7 @@
             android:layout_height="wrap_content"
             android:text="BEHAVIOUR"
             android:textSize="11sp"
-            android:textColor="@color/nova_purple"
+            android:textColor="@color/mojo_purple"
             android:letterSpacing="0.1"
             android:layout_marginBottom="10dp"/>
 
@@ -124,7 +124,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="NOVA starts when phone restarts"
+                    android:text="MOJO starts when phone restarts"
                     android:textSize="12sp"
                     android:textColor="@color/text_secondary"/>
 
@@ -144,7 +144,7 @@
             android:layout_height="wrap_content"
             android:text="HISTORY"
             android:textSize="11sp"
-            android:textColor="@color/nova_purple"
+            android:textColor="@color/mojo_purple"
             android:letterSpacing="0.1"
             android:layout_marginTop="12dp"
             android:layout_marginBottom="10dp"/>
@@ -173,7 +173,7 @@
             android:layout_height="wrap_content"
             android:text="ABOUT"
             android:textSize="11sp"
-            android:textColor="@color/nova_purple"
+            android:textColor="@color/mojo_purple"
             android:letterSpacing="0.1"
             android:layout_marginBottom="10dp"/>
 
@@ -188,7 +188,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="NOVA Voice Controller"
+                android:text="MOJO Voice Controller"
                 android:textSize="15sp"
                 android:textColor="@color/text_primary"
                 android:textStyle="bold"/>

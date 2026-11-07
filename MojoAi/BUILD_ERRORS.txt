@@ -1,5 +1,5 @@
 === Kotlin errors ===
-e: file:///home/runner/work/NOVA/NOVA/app/src/main/java/com/nova/app/engine/wake/NovaWakeWordEngine.kt:313:42 Returns are not allowed for functions with expression body. Use block body in '{...}'
+e: file:///home/runner/work/MOJO/MOJO/app/src/main/java/com/mojo/app/engine/wake/MojoWakeWordEngine.kt:313:42 Returns are not allowed for functions with expression body. Use block body in '{...}'
 
 === FAILED tasks ===
 > Task :app:compileReleaseKotlin FAILED
@@ -27,7 +27,7 @@ BUILD FAILED in 1m 45s
 > Task :app:kaptReleaseKotlin
 
 > Task :app:compileReleaseKotlin FAILED
-e: file:///home/runner/work/NOVA/NOVA/app/src/main/java/com/nova/app/engine/wake/NovaWakeWordEngine.kt:313:42 Returns are not allowed for functions with expression body. Use block body in '{...}'
+e: file:///home/runner/work/MOJO/MOJO/app/src/main/java/com/mojo/app/engine/wake/MojoWakeWordEngine.kt:313:42 Returns are not allowed for functions with expression body. Use block body in '{...}'
 gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run_2-1784464704371.json
 
 FAILURE: Build failed with an exception.

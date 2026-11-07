@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Theme.Nova" parent="Theme.Material3.DayNight.NoActionBar">
-        <item name="colorPrimary">@color/nova_purple</item>
-        <item name="colorPrimaryVariant">@color/nova_purple_dark</item>
+    <style name="Theme.Mojo" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/mojo_purple</item>
+        <item name="colorPrimaryVariant">@color/mojo_purple_dark</item>
         <item name="colorOnPrimary">@color/text_primary</item>
-        <item name="colorSecondary">@color/nova_teal</item>
+        <item name="colorSecondary">@color/mojo_teal</item>
         <item name="android:colorBackground">@color/bg_dark</item>
         <item name="android:windowBackground">@color/bg_dark</item>
         <item name="android:statusBarColor">@color/bg_dark</item>
@@ -14,11 +14,11 @@
         <item name="android:textColorSecondary">@color/text_secondary</item>
     </style>
 
-    <style name="Theme.Nova.WithActionBar" parent="Theme.Material3.DayNight">
-        <item name="colorPrimary">@color/nova_purple</item>
-        <item name="colorPrimaryVariant">@color/nova_purple_dark</item>
+    <style name="Theme.Mojo.WithActionBar" parent="Theme.Material3.DayNight">
+        <item name="colorPrimary">@color/mojo_purple</item>
+        <item name="colorPrimaryVariant">@color/mojo_purple_dark</item>
         <item name="colorOnPrimary">@color/text_primary</item>
-        <item name="colorSecondary">@color/nova_teal</item>
+        <item name="colorSecondary">@color/mojo_teal</item>
         <item name="android:colorBackground">@color/bg_dark</item>
         <item name="android:windowBackground">@color/bg_dark</item>
         <item name="android:statusBarColor">@color/bg_dark</item>

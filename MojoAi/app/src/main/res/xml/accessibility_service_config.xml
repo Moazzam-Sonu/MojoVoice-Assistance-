@@ -8,4 +8,4 @@
     android:notificationTimeout="100"
     android:canRetrieveWindowContent="true"
     android:canPerformGestures="true"
-    android:settingsActivity="com.nova.app.ui.settings.SettingsActivity" />
+    android:settingsActivity="com.mojo.app.ui.settings.SettingsActivity" />

@@ -10,5 +10,5 @@ local.properties
 Thumbs.db
 training/wake_word/positive/
 training/wake_word/negative/
-app/src/main/assets/models/*.nova
+app/src/main/assets/models/*.mojo
 app/src/main/assets/tts_phrases/

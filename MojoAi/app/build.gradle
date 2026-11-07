@@ -5,41 +5,39 @@ plugins {
 }
 
 android {
-    namespace "com.nova.app"
+    namespace "com.mojo.app"
     compileSdk 34
 
     defaultConfig {
-        applicationId "com.nova.app"
+        applicationId "com.mojo.app"
         minSdk 26
         targetSdk 34
-        versionCode 1
-        versionName "1.0.0"
+        // CI passes -PversionCode=<run_number>; local builds default to 1
+        versionCode((project.findProperty("versionCode") ?: "1").toString().toInteger())
+        versionName "1.0.${versionCode}"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    // Release keystore is created by CI (see .github/workflows/build.yml).
+    // Local debug builds use Android's default debug key, so no keystore is needed.
+    def releaseKeystore = file("../mojo_release.jks")
+
     signingConfigs {
         release {
-            storeFile file("../nova_release.jks")
-            storePassword "nova2024"
-            keyAlias "nova_key"
-            keyPassword "nova2024"
-        }
-        debug {
-            storeFile file("../nova_release.jks")
-            storePassword "nova2024"
-            keyAlias "nova_key"
-            keyPassword "nova2024"
+            storeFile releaseKeystore
+            storePassword "mojo2024"
+            keyAlias "mojo_key"
+            keyPassword "mojo2024"
         }
     }
 
     buildTypes {
         release {
             minifyEnabled false
-            signingConfig signingConfigs.release
+            if (releaseKeystore.exists()) signingConfig signingConfigs.release
             proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
         }
         debug {
-            signingConfig signingConfigs.debug
             debuggable true
         }
     }
@@ -51,12 +49,12 @@ android {
 
     kotlinOptions { jvmTarget = "17" }
     buildFeatures { viewBinding true }
-    aaptOptions { noCompress "nova", "pcm" }
+    androidResources { noCompress "mojo", "pcm" }
     lint { abortOnError false }
 }
 
 dependencies {
-    implementation "org.jetbrains.kotlin:kotlin-stdlib:1.9.0"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3"
     implementation "androidx.core:core-ktx:1.12.0"
     implementation "androidx.appcompat:appcompat:1.6.1"

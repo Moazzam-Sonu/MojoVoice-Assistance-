@@ -11,9 +11,9 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="NOVA"
+        android:text="MOJO"
         android:textSize="48sp"
-        android:textColor="@color/nova_purple"
+        android:textColor="@color/mojo_purple"
         android:textStyle="bold"
         android:letterSpacing="0.15"
         android:layout_marginTop="40dp"/>
@@ -44,7 +44,7 @@
             android:id="@+id/tvStatus"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="NOVA is active"
+            android:text="MOJO is active"
             android:textSize="15sp"
             android:textColor="@color/text_primary"/>
 
@@ -78,10 +78,10 @@
     </LinearLayout>
 
     <Button
-        android:id="@+id/btnToggleNova"
+        android:id="@+id/btnToggleMojo"
         android:layout_width="match_parent"
         android:layout_height="54dp"
-        android:text="Pause NOVA"
+        android:text="Pause MOJO"
         android:textSize="15sp"
         android:layout_marginTop="28dp"/>
 
@@ -116,7 +116,7 @@
         android:layout_height="wrap_content"
         android:text="&quot;Call Rahul&quot; &#x2022; &quot;Open YouTube&quot; &#x2022; &quot;Volume up&quot;"
         android:textSize="13sp"
-        android:textColor="@color/nova_purple"
+        android:textColor="@color/mojo_purple"
         android:gravity="center"
         android:layout_marginTop="6dp"/>
 

@@ -1,16 +1,16 @@
-# NOVA — Offline AI Voice Controller for Android
+# MOJO — Offline AI Voice Controller for Android
 
 > Your personal voice AI. No internet. No Google. No third-party SDKs. 100% built from scratch.
 
 ## Install
 
-**[Download Latest APK](https://github.com/Aniketsingh2104/NOVA/releases/latest)**
+**[Download Latest APK](https://github.com/Moazzam-Sonu/MojoVoice-Assistance-/releases/latest)**
 
-Or visit the download page: **https://Aniketsingh2104.github.io/NOVA**
+Or visit the download page: **https://moazzam-sonu.github.io/MojoVoice-Assistance-**
 
-## What is NOVA?
+## What is MOJO?
 
-NOVA is a fully offline, always-listening Android voice controller.
+MOJO is a fully offline, always-listening Android voice controller.
 It wakes on your custom word, understands natural language using an on-device AI
 written entirely from scratch, and controls every part of your Android phone.
 
@@ -43,8 +43,8 @@ written entirely from scratch, and controls every part of your Android phone.
 ## Build from source
 
 ```bash
-git clone https://github.com/Aniketsingh2104/NOVA.git
-cd NOVA
+git clone https://github.com/Moazzam-Sonu/MojoVoice-Assistance-.git
+cd MojoVoice-Assistance-/MojoAi
 ./gradlew assembleDebug
 ```
 
@@ -60,3 +60,5 @@ APK will be at: `app/build/outputs/apk/debug/app-debug.apk`
 ## License
 
 MIT License — free to use, modify, and distribute.
+
+Based on [NOVA](https://github.com/Aniketsingh2104/NOVA) by Aniketsingh2104 (MIT License).

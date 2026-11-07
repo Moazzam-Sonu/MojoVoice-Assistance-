@@ -16,13 +16,13 @@
             android:text="Set Your Wake Word"
             android:textSize="24sp"
             android:textStyle="bold"
-            android:textColor="@color/nova_purple"
+            android:textColor="@color/mojo_purple"
             android:layout_marginBottom="6dp"/>
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Say your wake word 3 times. That is all NOVA needs."
+            android:text="Say your wake word 3 times. That is all MOJO needs."
             android:textSize="13sp"
             android:textColor="@color/text_secondary"
             android:lineSpacingMultiplier="1.5"
@@ -50,7 +50,7 @@
                 android:id="@+id/etWakeWord"
                 android:layout_width="match_parent"
                 android:layout_height="52dp"
-                android:hint="e.g.  Nova  /  Jarvis  /  Boss"
+                android:hint="e.g.  Mojo  /  Jarvis  /  Boss"
                 android:textSize="16sp"
                 android:textColor="@color/text_primary"
                 android:textColorHint="@color/text_muted"
@@ -82,7 +82,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Say your word naturally. NOVA uses AI to generate many training variants from just 3 recordings."
+                android:text="Say your word naturally. MOJO uses AI to generate many training variants from just 3 recordings."
                 android:textSize="12sp"
                 android:textColor="@color/text_secondary"
                 android:lineSpacingMultiplier="1.4"
@@ -95,7 +95,7 @@
                 android:text="0 / 3"
                 android:textSize="32sp"
                 android:textStyle="bold"
-                android:textColor="@color/nova_purple"
+                android:textColor="@color/mojo_purple"
                 android:layout_gravity="center_horizontal"
                 android:layout_marginBottom="14dp"/>
 
@@ -106,7 +106,7 @@
                 android:layout_height="8dp"
                 android:max="3"
                 android:progress="0"
-                android:progressTint="@color/nova_purple"
+                android:progressTint="@color/mojo_purple"
                 android:layout_marginBottom="16dp"/>
 
             <Button
@@ -139,7 +139,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="NOVA auto-generates 24 training samples from your 3 recordings and trains the model on your phone in ~10 seconds."
+                android:text="MOJO auto-generates 24 training samples from your 3 recordings and trains the model on your phone in ~10 seconds."
                 android:textSize="12sp"
                 android:textColor="@color/text_secondary"
                 android:lineSpacingMultiplier="1.4"
@@ -149,7 +149,7 @@
                 android:id="@+id/btnTrain"
                 android:layout_width="match_parent"
                 android:layout_height="54dp"
-                android:text="Train NOVA"
+                android:text="Train MOJO"
                 android:textSize="15sp"
                 android:enabled="false"
                 style="@style/Widget.Material3.Button.OutlinedButton"/>
@@ -162,7 +162,7 @@
             android:layout_height="wrap_content"
             android:text=""
             android:textSize="14sp"
-            android:textColor="@color/nova_teal"
+            android:textColor="@color/mojo_teal"
             android:gravity="center"
             android:lineSpacingMultiplier="1.4"/>
 
