@@ -75,6 +75,11 @@ jobs:
               echo "=== Last 40 lines ==="
               tail -40 /tmp/build.txt
             } > BUILD_ERRORS.txt
+            # This file is committed to the public repo, and log masking doesn't apply
+            # to files — scrub the signing passwords just in case they ever appear.
+            for s in "$MOJO_KEYSTORE_PASSWORD" "$MOJO_KEY_PASSWORD"; do
+              if [ -n "$s" ]; then sed -i "s|$s|***|g" BUILD_ERRORS.txt; fi
+            done
             git config user.email "ci@mojo.app"
             git config user.name "MOJO CI"
             git add BUILD_ERRORS.txt
