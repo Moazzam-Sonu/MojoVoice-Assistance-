@@ -128,7 +128,7 @@ class MojoEngine : Service() {
             onResult = { recognisedText ->
                 if (isListening && recognisedText.isNotBlank()) handleText(recognisedText)
             },
-            onError = { if (isListening) endConversation() },   // nothing understood
+            onError = { if (isListening) endConversation("Sorry, I didn't catch that.") },
         )
         sttEngine.init()
 
@@ -161,17 +161,31 @@ class MojoEngine : Service() {
 
         // 8 second timeout
         mainHandler.postDelayed({
-            if (isListening && conversation == conversationId) endConversation()
+            if (isListening && conversation == conversationId) endConversation("I didn't hear a command.")
         }, 8000)
     }
 
-    /** Stops listening for a command and goes back to waiting for the wake word. */
-    private fun endConversation() {
+    /**
+     * Stops listening for a command and goes back to waiting for the wake word.
+     * With [apology], MOJO says it out loud first so the user isn't left guessing.
+     */
+    private fun endConversation(apology: String? = null) {
         isListening = false
         sttEngine.stopListening()
         updateNotification("MOJO listening — say your wake word")
-        setMascot(MojoState.IDLE)
-        resumeWake()
+        if (apology == null) {
+            setMascot(MojoState.IDLE)
+            resumeWake()
+            return
+        }
+        MojoStatus.reply.value = apology
+        setMascot(MojoState.SPEAKING)
+        ttsEngine.speak(apology) {
+            mainHandler.post {
+                flashMascot(MojoState.FOCUS, 1_500)
+                resumeWake()
+            }
+        }
     }
 
     /** Gives the mic back to the wake word engine once speech recognition has released it. */
