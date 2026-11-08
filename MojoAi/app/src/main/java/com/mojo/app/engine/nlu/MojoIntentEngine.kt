@@ -16,6 +16,7 @@ class MojoIntentEngine(private val context: Context) {
             .replace(Regex("[^a-z0-9 ]"), " ")
             .replace(Regex("\\s+"), " ")
             .trim()
+            .let { stripFillers(it) }
 
         fun has(vararg phrases: String) = phrases.any { Regex("\\b${Regex.escape(it)}\\b").containsMatchIn(t) }
         fun onOff(vararg things: String): Boolean? = when {
@@ -51,13 +52,27 @@ class MojoIntentEngine(private val context: Context) {
                 cmd(CommandType.CALL_CONTACT, afterWord(t, "call", "phone", "dial", "ring").removePrefix("to ").trim())
             has("open", "launch", "start", "run") ->
                 cmd(CommandType.OPEN_APP, afterWord(t, "open", "launch", "start", "run")
-                    .removePrefix("the ").removeSuffix(" app").removeSuffix(" application").trim())
+                    .split(" ").filter { it !in setOf("the", "my", "app", "application") }.joinToString(" ").trim())
 
             has("help", "what can you do") -> cmd(CommandType.MOJO_HELP)
             has("status", "are you there", "are you working") -> cmd(CommandType.MOJO_STATUS)
             has("stop", "go to sleep", "sleep") -> cmd(CommandType.MOJO_STOP)
             else -> ParsedCommand(CommandType.UNKNOWN, mapOf("original" to t))
         }
+    }
+
+    /**
+     * Drops politeness and wake-word leftovers that the recogniser often includes:
+     * "hello mojo open the teams please" → "open the teams".
+     */
+    private fun stripFillers(t: String): String {
+        var s = " $t "
+        for (phrase in listOf("can you", "could you", "would you", "will you", "for me", "right now")) {
+            s = s.replace(" $phrase ", " ")
+        }
+        val fillers = setOf("please", "pls", "plz", "kindly", "hey", "hello", "hi", "ok", "okay",
+            "mojo", "moto", "mujo", "mojjo")
+        return s.trim().split(" ").filter { it.isNotBlank() && it !in fillers }.joinToString(" ")
     }
 
     /** Everything after the first of [words] that appears in [t]. */

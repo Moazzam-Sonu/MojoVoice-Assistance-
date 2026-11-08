@@ -22,7 +22,8 @@ import android.util.Log
  */
 class MojoSTTEngine(
     private val context: Context,
-    private val onResult: (String) -> Unit,
+    /** All alternatives the recogniser heard, best guess first. */
+    private val onResult: (List<String>) -> Unit,
     /** Called (on the main thread) when nothing usable was recognised. */
     private val onError: () -> Unit = {},
 ) {
@@ -110,11 +111,11 @@ class MojoSTTEngine(
                 override fun onResults(results: Bundle?) {
                     isListening = false
                     firstSetup = index
-                    val text = results
+                    val texts = results
                         ?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
-                        ?.firstOrNull()?.trim() ?: ""
-                    Log.d(TAG, "STT result: \"$text\"")
-                    if (text.isNotBlank()) onResult(text) else this@MojoSTTEngine.onError()
+                        ?.map { it.trim() }?.filter { it.isNotBlank() } ?: emptyList()
+                    Log.d(TAG, "STT results: $texts")
+                    if (texts.isNotEmpty()) onResult(texts) else this@MojoSTTEngine.onError()
                 }
                 override fun onPartialResults(partial: Bundle?) {}
                 override fun onEvent(eventType: Int, params: Bundle?) {}

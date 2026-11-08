@@ -103,18 +103,49 @@ class CommandExecutor(private val context: Context) {
             ?: found.firstOrNull()
     }
 
-    private fun openApp(name: String): CommandResult {
-        if (name.isBlank()) return CommandResult(false, "Which app should I open?")
+    /** Everyday words people say for built-in apps, mapped to the labels phones use. */
+    private val appAliases = mapOf(
+        "calls" to listOf("phone"), "call" to listOf("phone"), "dialer" to listOf("phone"), "dial" to listOf("phone"),
+        "sms" to listOf("messages"), "texts" to listOf("messages"), "text" to listOf("messages"), "message" to listOf("messages"),
+        "photos" to listOf("gallery", "photos"), "pictures" to listOf("gallery", "photos"), "gallery" to listOf("gallery", "photos"),
+        "files" to listOf("my files", "files"), "file" to listOf("my files", "files"), "file manager" to listOf("my files", "files"),
+        "music" to listOf("music", "youtube music", "spotify"), "maps" to listOf("maps"), "map" to listOf("maps"),
+        "browser" to listOf("chrome", "internet", "browser"), "internet" to listOf("internet", "chrome"),
+        "mail" to listOf("gmail", "email"), "email" to listOf("gmail", "email"),
+        "play store" to listOf("play store"), "store" to listOf("play store", "galaxy store"),
+        "clock" to listOf("clock"), "alarm" to listOf("clock"), "calculator" to listOf("calculator"),
+        "calendar" to listOf("calendar"), "contacts" to listOf("contacts"), "notes" to listOf("samsung notes", "notes", "keep notes"),
+        "whats app" to listOf("whatsapp"), "you tube" to listOf("youtube"), "face book" to listOf("facebook"),
+        "microsoft teams" to listOf("teams"), "team" to listOf("teams"),
+    )
+
+    /** Finds a launcher app for a spoken name: exact, then starts-with, then contains (spaces ignored). */
+    fun findApp(name: String): Pair<String, String>? {
+        if (name.isBlank()) return null
         val pm = context.packageManager
-        val wanted = name.lowercase().replace(" ", "")
         // Launcher apps only; visible to us via the <queries> entry in the manifest
         val apps = pm.queryIntentActivities(
             Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER), 0
         ).map { it.loadLabel(pm).toString() to it.activityInfo.packageName }
-        val match = apps.firstOrNull { it.first.lowercase().replace(" ", "") == wanted }
-            ?: apps.firstOrNull { it.first.lowercase().replace(" ", "").startsWith(wanted) }
-            ?: apps.firstOrNull { it.first.lowercase().replace(" ", "").contains(wanted) }
-            ?: return CommandResult(false, "I couldn't find an app called $name.")
+        fun norm(s: String) = s.lowercase().replace(" ", "")
+        val spoken = name.lowercase().trim()
+        val candidates = listOf(spoken) + (appAliases[spoken] ?: emptyList())
+        for (c in candidates.map(::norm)) {
+            apps.firstOrNull { norm(it.first) == c }?.let { return it }
+        }
+        for (c in candidates.map(::norm)) {
+            apps.firstOrNull { norm(it.first).startsWith(c) }?.let { return it }
+        }
+        for (c in candidates.map(::norm)) {
+            if (c.length >= 3) apps.firstOrNull { norm(it.first).contains(c) }?.let { return it }
+        }
+        return null
+    }
+
+    private fun openApp(name: String): CommandResult {
+        if (name.isBlank()) return CommandResult(false, "Which app should I open?")
+        val pm = context.packageManager
+        val match = findApp(name) ?: return CommandResult(false, "I couldn't find an app called $name.")
         if (!canOpenScreens()) return needAccessibility
         val intent = pm.getLaunchIntentForPackage(match.second)
             ?: return CommandResult(false, "I can't open ${match.first}.")

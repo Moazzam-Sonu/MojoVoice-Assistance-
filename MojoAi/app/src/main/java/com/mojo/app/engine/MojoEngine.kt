@@ -16,6 +16,8 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
 import androidx.core.content.ContextCompat
 import com.mojo.app.commands.CommandExecutor
+import com.mojo.app.commands.CommandType
+import com.mojo.app.commands.ParsedCommand
 import com.mojo.app.core.MojoApplication
 import com.mojo.app.core.MojoStatus
 import com.mojo.app.ui.mascot.MojoState
@@ -125,8 +127,8 @@ class MojoEngine : Service() {
 
         // STT result callback — fires on main thread from SpeechRecognizer
         sttEngine = MojoSTTEngine(this,
-            onResult = { recognisedText ->
-                if (isListening && recognisedText.isNotBlank()) handleText(recognisedText)
+            onResult = { alternatives ->
+                if (isListening && alternatives.isNotEmpty()) handleText(alternatives)
             },
             onError = { if (isListening) endConversation("Sorry, I didn't catch that.") },
         )
@@ -159,10 +161,11 @@ class MojoEngine : Service() {
             mainHandler.post { if (isListening && conversation == conversationId) sttEngine.startListening() }
         }
 
-        // 8 second timeout
+        // Safety timeout. Generous: "yes", recogniser fallbacks and online recognition
+        // can take several seconds before the user's words come back.
         mainHandler.postDelayed({
             if (isListening && conversation == conversationId) endConversation("I didn't hear a command.")
-        }, 8000)
+        }, 15_000)
     }
 
     /**
@@ -193,16 +196,29 @@ class MojoEngine : Service() {
         mainHandler.postDelayed({ startWakeListening() }, 400)
     }
 
-    private fun handleText(text: String) {
+    /**
+     * The recogniser returns a few guesses ("open the teams", "open the calls", …).
+     * Use the first one that is a real command — for "open X", one whose app is installed.
+     */
+    private fun pickCommand(alternatives: List<String>): Pair<String, ParsedCommand> {
+        val parsed = alternatives.map { it to intentEngine.parse(it) }
+        return parsed.firstOrNull { (_, c) ->
+            c.type != CommandType.UNKNOWN && (c.type != CommandType.OPEN_APP || executor.findApp(c.param) != null)
+        } ?: parsed.firstOrNull { (_, c) -> c.type != CommandType.UNKNOWN }
+        ?: parsed.first()
+    }
+
+    private fun handleText(alternatives: List<String>) {
         isListening = false
         sttEngine.stopListening()
-        Log.d(TAG, "Command: $text")
+        val (text, command) = pickCommand(alternatives)
+        Log.d(TAG, "Command: $text (from $alternatives)")
         MojoStatus.heard.value = text
         setMascot(MojoState.THINKING)
 
         scope.launch {
-            val command = intentEngine.parse(text)
             val result  = withContext(Dispatchers.Main) { executor.execute(command, text) }
+            Log.d(TAG, "Parsed: ${command.type} '${command.param}' → ${if (result.success) "OK" else "FAIL"}: ${result.feedback}")
             MojoStatus.reply.value = result.feedback
             setMascot(MojoState.SPEAKING)
             ttsEngine.speak(result.feedback) {
