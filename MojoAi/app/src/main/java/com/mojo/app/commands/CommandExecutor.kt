@@ -119,8 +119,20 @@ class CommandExecutor(private val context: Context) {
         "microsoft teams" to listOf("teams"), "team" to listOf("teams"),
     )
 
-    /** Finds a launcher app for a spoken name: exact, then starts-with, then contains (spaces ignored). */
+    /**
+     * Finds a launcher app for a spoken name. If the whole phrase doesn't match,
+     * tries shorter starts ("whatsapp please now" → "whatsapp please" → "whatsapp").
+     */
     fun findApp(name: String): Pair<String, String>? {
+        val words = name.trim().split(" ").filter { it.isNotBlank() }
+        for (n in words.size downTo 1) {
+            findAppExact(words.take(n).joinToString(" "))?.let { return it }
+        }
+        return null
+    }
+
+    /** Matches a name: exact, then starts-with, then contains (spaces ignored). */
+    private fun findAppExact(name: String): Pair<String, String>? {
         if (name.isBlank()) return null
         val pm = context.packageManager
         // Launcher apps only; visible to us via the <queries> entry in the manifest

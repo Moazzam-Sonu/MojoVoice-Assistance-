@@ -52,7 +52,10 @@ class MojoIntentEngine(private val context: Context) {
                 cmd(CommandType.CALL_CONTACT, afterWord(t, "call", "phone", "dial", "ring").removePrefix("to ").trim())
             has("open", "launch", "start", "run") ->
                 cmd(CommandType.OPEN_APP, afterWord(t, "open", "launch", "start", "run")
-                    .split(" ").filter { it !in setOf("the", "my", "app", "application") }.joinToString(" ").trim())
+                    // "open whatsapp and send a message" → the app is just "whatsapp"
+                    .split(Regex("\\b(and|then|to|so)\\b"))[0]
+                    .split(" ").filter { it.isNotBlank() && it !in setOf("the", "my", "app", "application") }
+                    .joinToString(" ").trim())
 
             has("help", "what can you do") -> cmd(CommandType.MOJO_HELP)
             has("status", "are you there", "are you working") -> cmd(CommandType.MOJO_STATUS)
