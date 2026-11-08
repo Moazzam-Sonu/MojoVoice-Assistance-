@@ -31,6 +31,9 @@ class MojoSTTEngine(
         // SpeechRecognizer.ERROR_LANGUAGE_NOT_SUPPORTED / ERROR_LANGUAGE_UNAVAILABLE (API 31+)
         private const val ERROR_LANGUAGE_NOT_SUPPORTED = 12
         private const val ERROR_LANGUAGE_UNAVAILABLE = 13
+        private const val ERROR_SERVER_DISCONNECTED = 11
+        /** Give the recognition service time to let go before starting again. */
+        private const val RETRY_DELAY_MS = 350L
 
         private data class Setup(val language: String?, val preferOffline: Boolean)
         private val SETUPS = listOf(
@@ -50,6 +53,7 @@ class MojoSTTEngine(
             SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS -> "permission"
             ERROR_LANGUAGE_NOT_SUPPORTED -> "language not supported"
             ERROR_LANGUAGE_UNAVAILABLE -> "language unavailable"
+            ERROR_SERVER_DISCONNECTED -> "service disconnected"
             else -> "code $error"
         }
     }
@@ -76,7 +80,7 @@ class MojoSTTEngine(
         if (!isListening) return
         val setup = SETUPS[index]
         try {
-            recognizer?.destroy()
+            destroyRecognizer()
             recognizer = SpeechRecognizer.createSpeechRecognizer(context)
             recognizer?.setRecognitionListener(object : RecognitionListener {
                 override fun onReadyForSpeech(params: Bundle?) { Log.d(TAG, "Ready ($setup)") }
@@ -86,9 +90,18 @@ class MojoSTTEngine(
                 override fun onEndOfSpeech() {}
                 override fun onError(error: Int) {
                     Log.w(TAG, "STT error: ${describe(error)} ($setup)")
-                    val languageProblem = error == ERROR_LANGUAGE_NOT_SUPPORTED || error == ERROR_LANGUAGE_UNAVAILABLE
-                    if (languageProblem && index + 1 < SETUPS.size && isListening) {
-                        mainHandler.post { listenWith(index + 1) }   // try the next setup
+                    // Language missing, or the recognition service dropped while we switched
+                    // setups (11 = ERROR_SERVER_DISCONNECTED): try the next setup after a short pause.
+                    val retryable = error == ERROR_LANGUAGE_NOT_SUPPORTED || error == ERROR_LANGUAGE_UNAVAILABLE ||
+                        error == ERROR_SERVER_DISCONNECTED || error == SpeechRecognizer.ERROR_CLIENT ||
+                        error == SpeechRecognizer.ERROR_RECOGNIZER_BUSY
+                    if (retryable && index + 1 < SETUPS.size && isListening) {
+                        // A missing language won't appear by itself — skip this setup from now on.
+                        if (error == ERROR_LANGUAGE_NOT_SUPPORTED || error == ERROR_LANGUAGE_UNAVAILABLE) {
+                            firstSetup = maxOf(firstSetup, index + 1)
+                        }
+                        destroyRecognizer()
+                        mainHandler.postDelayed({ listenWith(index + 1) }, RETRY_DELAY_MS)
                         return
                     }
                     isListening = false
@@ -121,6 +134,11 @@ class MojoSTTEngine(
             isListening = false
             this@MojoSTTEngine.onError()
         }
+    }
+
+    private fun destroyRecognizer() {
+        try { recognizer?.cancel(); recognizer?.destroy() } catch (_: Exception) {}
+        recognizer = null
     }
 
     fun stopListening() {
