@@ -22,6 +22,7 @@ class CommandExecutor(private val context: Context) {
         when (command.type) {
             CommandType.CALL_CONTACT   -> makeCall(command.param)
             CommandType.OPEN_APP       -> openApp(command.param)
+            CommandType.WEB_SEARCH     -> webSearch(command.param)
             CommandType.GO_HOME        -> accessibility(MojoAccessibilityService.ACTION_HOME)
             CommandType.GO_BACK        -> accessibility(MojoAccessibilityService.ACTION_BACK)
             CommandType.RECENT_APPS    -> accessibility(MojoAccessibilityService.ACTION_RECENTS)
@@ -41,7 +42,7 @@ class CommandExecutor(private val context: Context) {
             CommandType.BLUETOOTH_ON   -> btSettings()
             CommandType.BLUETOOTH_OFF  -> btSettings()
             CommandType.MOJO_STOP   -> CommandResult(true, "Okay. Say my wake word when you need me.")
-            CommandType.MOJO_HELP   -> CommandResult(true, "You can say: call someone from your contacts, open an app, volume up or down, brightness up or down, flashlight on or off, wifi, bluetooth, take a screenshot, lock the phone, scroll, go home, or go back.")
+            CommandType.MOJO_HELP   -> CommandResult(true, "You can say: call someone from your contacts, open an app, search Google, volume up or down, brightness up or down, flashlight on or off, wifi, bluetooth, take a screenshot, lock the phone, scroll, go home, or go back.")
             CommandType.MOJO_STATUS -> CommandResult(true, "I'm here and listening for my wake word.")
             CommandType.UNKNOWN     -> CommandResult(false, "I did not understand that. Try saying help.")
             else                    -> CommandResult(false, "Command not yet implemented.")
@@ -152,6 +153,15 @@ class CommandExecutor(private val context: Context) {
             if (c.length >= 3) apps.firstOrNull { norm(it.first).contains(c) }?.let { return it }
         }
         return null
+    }
+
+    /** Opens a Google search for [query] in the phone's browser. */
+    private fun webSearch(query: String): CommandResult {
+        if (query.isBlank()) return CommandResult(false, "What should I search for?")
+        if (!canOpenScreens()) return needAccessibility
+        val url = "https://www.google.com/search?q=${Uri.encode(query)}"
+        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+        return CommandResult(true, "Searching for $query")
     }
 
     private fun openApp(name: String): CommandResult {

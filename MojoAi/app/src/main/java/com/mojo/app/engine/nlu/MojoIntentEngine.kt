@@ -48,6 +48,10 @@ class MojoIntentEngine(private val context: Context) {
             has("go home", "home screen") || t == "home" -> cmd(CommandType.GO_HOME)
             has("go back") || t == "back" -> cmd(CommandType.GO_BACK)
 
+            has("search", "google", "look up") ->
+                cmd(CommandType.WEB_SEARCH, afterWord(t, "search", "google", "up")
+                    .removePrefix("for ").trim())
+
             // "open the phone" means the Phone app, not a call
             !Regex("^(open|launch|start|run)\\b").containsMatchIn(t) && has("call", "phone", "dial", "ring") ->
                 cmd(CommandType.CALL_CONTACT, afterWord(t, "call", "phone", "dial", "ring").removePrefix("to ").trim())
