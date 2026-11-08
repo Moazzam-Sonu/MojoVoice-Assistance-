@@ -16,9 +16,10 @@ import android.util.Log
  * Phones differ in which languages they can recognise offline, so each
  * listen tries a few setups in order and moves on when the recogniser says
  * the language isn't available (errors 12/13):
- *   1. English (US), offline preferred
- *   2. English (US), online allowed
- *   3. the phone's own default language, online allowed
+ *   1. English (India) online — best for South Asian accents
+ *   2. English (US) online
+ *   3. the phone's own default language, online
+ *   4. English (US) offline
  */
 class MojoSTTEngine(
     private val context: Context,
@@ -37,10 +38,14 @@ class MojoSTTEngine(
         private const val RETRY_DELAY_MS = 350L
 
         private data class Setup(val language: String?, val preferOffline: Boolean)
+        // Indian English handles South Asian (Pakistani/Indian) accents best; US English
+        // and the phone's default language are fallbacks. Offline packs are rarely installed
+        // for en-IN, so the online setups come first and offline is tried last.
         private val SETUPS = listOf(
-            Setup("en-US", preferOffline = true),
+            Setup("en-IN", preferOffline = false),
             Setup("en-US", preferOffline = false),
             Setup(null, preferOffline = false),
+            Setup("en-US", preferOffline = true),
         )
 
         fun describe(error: Int): String = when (error) {
@@ -124,7 +129,7 @@ class MojoSTTEngine(
             val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
                 putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
                 if (setup.language != null) putExtra(RecognizerIntent.EXTRA_LANGUAGE, setup.language)
-                putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 3)
+                putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 5)
                 putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 1500L)
                 putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, setup.preferOffline)
             }
