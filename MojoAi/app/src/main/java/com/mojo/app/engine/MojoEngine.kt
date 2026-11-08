@@ -15,6 +15,7 @@ import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
 import androidx.core.content.ContextCompat
+import com.mojo.app.accessibility.MojoAccessibilityService
 import com.mojo.app.commands.CommandExecutor
 import com.mojo.app.commands.CommandType
 import com.mojo.app.commands.ParsedCommand
@@ -45,6 +46,7 @@ class MojoEngine : Service() {
     private var canRun = true   // false when started without mic permission
     private var wakePaused = false   // true while another screen is recording
     private var conversationId = 0   // ignores stale timeouts from earlier conversations
+    private var awaitingSendConfirm = false   // waiting for "yes" to send a WhatsApp message
 
     override fun onCreate() {
         super.onCreate()
@@ -174,6 +176,7 @@ class MojoEngine : Service() {
      */
     private fun endConversation(apology: String? = null) {
         isListening = false
+        awaitingSendConfirm = false
         sttEngine.stopListening()
         updateNotification("MOJO listening — say your wake word")
         if (apology == null) {
@@ -208,7 +211,46 @@ class MojoEngine : Service() {
         ?: parsed.first()
     }
 
+    /** After "Should I send it?", listens for a yes/no answer (the wake engine stays paused). */
+    private fun askToConfirmSend() {
+        awaitingSendConfirm = true
+        isListening = true
+        val conversation = ++conversationId
+        setMascot(MojoState.LISTENING)
+        updateNotification("MOJO — say yes to send")
+        sttEngine.startListening()
+        mainHandler.postDelayed({
+            if (isListening && conversation == conversationId) endConversation("Okay, I didn't send it.")
+        }, 12_000)
+    }
+
+    /** "yes"/"send"/"haan" presses WhatsApp's Send button; anything else leaves the message unsent. */
+    private fun handleSendConfirmation(alternatives: List<String>) {
+        awaitingSendConfirm = false
+        isListening = false
+        sttEngine.stopListening()
+        val said = alternatives.joinToString(" ").lowercase()
+        val no = Regex("\\b(no|nope|don ?t|do not|cancel|stop|wait|nahi|nahin|mat)\\b").containsMatchIn(said)
+        val yes = Regex("\\b(yes|yeah|yep|yup|send|sure|ok|okay|haan|han|ha|ji|go ahead|do it)\\b").containsMatchIn(said)
+        Log.d(TAG, "Send confirmation: \"$said\" → yes=$yes no=$no")
+        val sent = yes && !no && (MojoAccessibilityService.instance?.clickWhatsAppSend() == true)
+        val reply = when {
+            sent -> "Sent."
+            yes && !no -> "I couldn't press send. Please tap it yourself."
+            else -> "Okay, I didn't send it."
+        }
+        MojoStatus.reply.value = reply
+        setMascot(MojoState.SPEAKING)
+        ttsEngine.speak(reply) {
+            mainHandler.post {
+                flashMascot(if (sent) MojoState.SUCCESS else MojoState.FOCUS, 2_000)
+                resumeWake()
+            }
+        }
+    }
+
     private fun handleText(alternatives: List<String>) {
+        if (awaitingSendConfirm) { handleSendConfirmation(alternatives); return }
         isListening = false
         sttEngine.stopListening()
         val (text, command) = pickCommand(alternatives)
@@ -222,10 +264,14 @@ class MojoEngine : Service() {
             MojoStatus.reply.value = result.feedback
             setMascot(MojoState.SPEAKING)
             ttsEngine.speak(result.feedback) {
-                // Speech finished: celebrate a success, look focused on a failure
                 mainHandler.post {
-                    flashMascot(if (result.success) MojoState.SUCCESS else MojoState.FOCUS, 2_400)
-                    resumeWake()
+                    if (result.followUp == CommandExecutor.FollowUp.CONFIRM_SEND) {
+                        askToConfirmSend()   // "Should I send it?" → wait for yes/no
+                    } else {
+                        // Speech finished: celebrate a success, look focused on a failure
+                        flashMascot(if (result.success) MojoState.SUCCESS else MojoState.FOCUS, 2_400)
+                        resumeWake()
+                    }
                 }
             }
             updateNotification("Last: \"${text.take(40)}\"")

@@ -16,13 +16,17 @@ class CommandExecutor(private val context: Context) {
     private val audio = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
     private val camera = context.getSystemService(Context.CAMERA_SERVICE) as CameraManager
 
-    data class CommandResult(val success: Boolean, val feedback: String)
+    /** What MOJO should do after speaking the feedback. */
+    enum class FollowUp { CONFIRM_SEND }
+
+    data class CommandResult(val success: Boolean, val feedback: String, val followUp: FollowUp? = null)
 
     fun execute(command: ParsedCommand, originalText: String): CommandResult = try {
         when (command.type) {
             CommandType.CALL_CONTACT   -> makeCall(command.param)
             CommandType.OPEN_APP       -> openApp(command.param)
             CommandType.WEB_SEARCH     -> webSearch(command.param)
+            CommandType.WHATSAPP_MESSAGE -> whatsappMessage(command.getParam("name"), command.getParam("message"))
             CommandType.GO_HOME        -> accessibility(MojoAccessibilityService.ACTION_HOME)
             CommandType.GO_BACK        -> accessibility(MojoAccessibilityService.ACTION_BACK)
             CommandType.RECENT_APPS    -> accessibility(MojoAccessibilityService.ACTION_RECENTS)
@@ -42,7 +46,7 @@ class CommandExecutor(private val context: Context) {
             CommandType.BLUETOOTH_ON   -> btSettings()
             CommandType.BLUETOOTH_OFF  -> btSettings()
             CommandType.MOJO_STOP   -> CommandResult(true, "Okay. Say my wake word when you need me.")
-            CommandType.MOJO_HELP   -> CommandResult(true, "You can say: call someone from your contacts, open an app, search Google, volume up or down, brightness up or down, flashlight on or off, wifi, bluetooth, take a screenshot, lock the phone, scroll, go home, or go back.")
+            CommandType.MOJO_HELP   -> CommandResult(true, "You can say: call someone from your contacts, open an app, send a WhatsApp message, search Google, volume up or down, brightness up or down, flashlight on or off, wifi, bluetooth, take a screenshot, lock the phone, scroll, go home, or go back.")
             CommandType.MOJO_STATUS -> CommandResult(true, "I'm here and listening for my wake word.")
             CommandType.UNKNOWN     -> CommandResult(false, "I did not understand that. Try saying help.")
             else                    -> CommandResult(false, "Command not yet implemented.")
@@ -153,6 +157,43 @@ class CommandExecutor(private val context: Context) {
             if (c.length >= 3) apps.firstOrNull { norm(it.first).contains(c) }?.let { return it }
         }
         return null
+    }
+
+    /**
+     * Opens the WhatsApp chat with [name] (from contacts) with [message] typed in,
+     * then asks the user to confirm before anything is sent.
+     */
+    private fun whatsappMessage(name: String, message: String): CommandResult {
+        if (name.isBlank()) return CommandResult(false, "Who should I message?")
+        if (message.isBlank()) return CommandResult(false, "What should I say to $name?")
+        val pm = context.packageManager
+        val pkg = listOf("com.whatsapp", "com.whatsapp.w4b").firstOrNull { pm.getLaunchIntentForPackage(it) != null }
+            ?: return CommandResult(false, "WhatsApp isn't installed on this phone.")
+        val (label, number) = findContact(name)
+            ?: return CommandResult(false, "I couldn't find $name in your contacts.")
+        val phone = internationalNumber(number)
+            ?: return CommandResult(false, "I couldn't read $label's phone number.")
+        if (!canOpenScreens()) return needAccessibility
+        val uri = Uri.parse("https://api.whatsapp.com/send?phone=$phone&text=${Uri.encode(message)}")
+        context.startActivity(Intent(Intent.ACTION_VIEW, uri).setPackage(pkg).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+        return CommandResult(true, "I've written $message to $label on WhatsApp. Should I send it?", FollowUp.CONFIRM_SEND)
+    }
+
+    /** WhatsApp wants the number with country code and digits only, e.g. 923001234567. */
+    private fun internationalNumber(raw: String): String? {
+        val plus = raw.trim().startsWith("+")
+        var digits = raw.filter { it.isDigit() }
+        if (digits.length < 7) return null
+        if (plus) return digits
+        if (digits.startsWith("00")) return digits.drop(2)
+        if (digits.startsWith("0")) {
+            val tm = context.getSystemService(Context.TELEPHONY_SERVICE) as? android.telephony.TelephonyManager
+            val iso = (tm?.simCountryIso?.takeIf { it.isNotBlank() } ?: tm?.networkCountryIso ?: "").lowercase()
+            val code = mapOf("pk" to "92", "in" to "91", "ae" to "971", "sa" to "966", "gb" to "44",
+                "us" to "1", "ca" to "1", "qa" to "974", "om" to "968", "kw" to "965", "bd" to "880")[iso] ?: "92"
+            digits = code + digits.drop(1)
+        }
+        return digits
     }
 
     /** Opens a Google search for [query] in the phone's browser. */

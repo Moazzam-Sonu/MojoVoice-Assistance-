@@ -67,6 +67,39 @@ class MojoAccessibilityService : AccessibilityService() {
         root.recycle()
     }
 
+    /**
+     * Presses WhatsApp's Send button — only when WhatsApp is the app on screen,
+     * and only after the user said "yes" to sending.
+     */
+    fun clickWhatsAppSend(): Boolean {
+        val root = rootInActiveWindow ?: return false
+        val pkg = root.packageName?.toString() ?: ""
+        if (!pkg.startsWith("com.whatsapp")) return false
+        for (id in listOf("$pkg:id/send", "$pkg:id/send_btn")) {
+            val btn = root.findAccessibilityNodeInfosByViewId(id)?.firstOrNull { it.isEnabled && it.isVisibleToUser }
+            if (btn != null) return clickNodeOrParent(btn)
+        }
+        return findByDescription(root, "Send")?.let { clickNodeOrParent(it) } ?: false
+    }
+
+    private fun clickNodeOrParent(node: AccessibilityNodeInfo): Boolean {
+        var n: AccessibilityNodeInfo? = node
+        while (n != null) {
+            if (n.isClickable) return n.performAction(AccessibilityNodeInfo.ACTION_CLICK)
+            n = n.parent
+        }
+        return false
+    }
+
+    private fun findByDescription(node: AccessibilityNodeInfo, desc: String): AccessibilityNodeInfo? {
+        if (node.contentDescription?.toString().equals(desc, ignoreCase = true)) return node
+        for (i in 0 until node.childCount) {
+            val child = node.getChild(i) ?: continue
+            findByDescription(child, desc)?.let { return it }
+        }
+        return null
+    }
+
     companion object {
         var instance: MojoAccessibilityService? = null
             private set

@@ -28,6 +28,10 @@ class MojoIntentEngine(private val context: Context) {
         fun cmd(type: CommandType, param: String? = null) =
             ParsedCommand(type, if (param == null) emptyMap() else mapOf("param" to param))
 
+        parseWhatsApp(t)?.let { (name, message) ->
+            return ParsedCommand(CommandType.WHATSAPP_MESSAGE, mapOf("name" to name, "message" to message))
+        }
+
         onOff("flashlight", "torch", "flash light")?.let {
             return cmd(if (it) CommandType.FLASHLIGHT_ON else CommandType.FLASHLIGHT_OFF)
         }
@@ -78,9 +82,43 @@ class MojoIntentEngine(private val context: Context) {
         for (phrase in listOf("can you", "could you", "would you", "will you", "for me", "right now")) {
             s = s.replace(" $phrase ", " ")
         }
-        val fillers = setOf("please", "pls", "plz", "kindly", "hey", "hello", "hi", "ok", "okay",
-            "mojo", "moto", "mujo", "mojjo")
-        return s.trim().split(" ").filter { it.isNotBlank() && it !in fillers }.joinToString(" ")
+        // Politeness words go everywhere; greetings / wake-word leftovers only at the start,
+        // so a message like "send hello to Qasim" keeps its "hello".
+        val politeness = setOf("please", "pls", "plz", "kindly")
+        val leading = setOf("hey", "hello", "hi", "ok", "okay", "mojo", "moto", "mujo", "mojjo")
+        val words = s.trim().split(" ").filter { it.isNotBlank() && it !in politeness }
+        return words.dropWhile { it in leading }.joinToString(" ")
+    }
+
+    /**
+     * "open whatsapp and search qasim contact send hello message to him",
+     * "send hello to qasim on whatsapp", "whatsapp qasim saying hello" → (qasim, hello)
+     */
+    private fun parseWhatsApp(t: String): Pair<String, String>? {
+        if (!Regex("\\bwhats ?app\\b").containsMatchIn(t)) return null
+        if (!Regex("\\b(send|message|text|msg|write|saying)\\b").containsMatchIn(t)) return null
+        val s = t.replace(Regex("\\b(on|in|via|using|through|from) (the )?whats ?app\\b"), " ")
+            .replace(Regex("\\s+"), " ").trim()
+        val pronouns = setOf("him", "her", "them", "it", "me", "my")
+        val stop = setOf("saying", "that", "says", "and", "message", "text", "on", "whatsapp", "whats", "app", "contact")
+
+        fun cleanName(raw: String): String =
+            raw.split(" ").takeWhile { it.isNotBlank() && it !in stop }.take(2).joinToString(" ")
+
+        val name = Regex("\\bto ([a-z]+(?: [a-z]+)?)").findAll(s)
+            .map { cleanName(it.groupValues[1]) }
+            .firstOrNull { it.isNotBlank() && it.split(" ")[0] !in pronouns }
+            ?: Regex("\\bsearch (?:for )?([a-z]+(?: [a-z]+)?)").find(s)?.let { cleanName(it.groupValues[1]) }
+            ?: Regex("\\b([a-z]+) contact\\b").find(s)?.groupValues?.get(1)
+            ?: Regex("\\b(?:message|text|whatsapp) ([a-z]+)").find(s)?.let { cleanName(it.groupValues[1]) }
+        if (name.isNullOrBlank() || name in pronouns) return null
+
+        val message = (Regex("\\b(?:saying|that says|says|that)\\s+(.+)$").find(s)?.groupValues?.get(1)
+            ?: Regex("\\bsend (?:a |the )?(?:message |text )?(.+?)(?: message| text)?(?: to [a-z ]+)?$")
+                .find(s)?.groupValues?.get(1))
+            ?.trim()
+        if (message.isNullOrBlank() || message in setOf("a message", "message", "text", "a text")) return null
+        return name to message
     }
 
     /** Everything after the first of [words] that appears in [t]. */
